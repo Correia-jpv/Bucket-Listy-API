@@ -1,5 +1,5 @@
 build:
   docker:
-    web: ./Dockerfile
+    web: BucketListyAPI/Dockerfile
 run: 
   web: npm start
