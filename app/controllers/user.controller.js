@@ -133,13 +133,11 @@ exports.addItemToUser = (req, res) => {
   }
 
   const user = req.params.user;
-  const itemChecked = false;
+  const itemChecked = req.body.checked;
   const item = { item: req.body.item, checked: itemChecked };
 
 
-  User.findByIdAndUpdate(
-      user, { $push: { items: item } }, { new: true }
-    )
+  User.update({ "idToken": token }, { $push: { items: item } }, { new: true })
     .then(data => {
       if (!data) {
         res.status(404).send({
@@ -167,7 +165,7 @@ exports.updateItemFromUser = (req, res) => {
   const itemChecked = req.body.checked;
 
 
-  User.update({ "_id": user, "items.item": item }, { "$set": { "items.$.checked": itemChecked } })
+  User.update({ "idToken": user, "items.item": item }, { "$set": { "items.$.checked": itemChecked } })
     .then(data => {
       if (!data) {
         res.status(404).send({
@@ -188,9 +186,7 @@ exports.deleteItemFromUser = (req, res) => {
   const item = req.params.item;
 
 
-  User.findByIdAndUpdate(
-      user, { $pull: { items: { item: item } } }
-    )
+  User.update({ "idToken": token }, { $pull: { items: { item: item } } })
     .then(data => {
       if (!data) {
         res.status(404).send({
