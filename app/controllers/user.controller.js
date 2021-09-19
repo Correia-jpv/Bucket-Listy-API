@@ -137,7 +137,7 @@ exports.addItemToUser = (req, res) => {
   const item = { item: req.body.item, checked: itemChecked };
 
 
-  User.update({ "idToken": token }, { $push: { items: item } }, { new: true })
+  User.update({ "idToken": user }, { $push: { items: item } }, { new: true })
     .then(data => {
       if (!data) {
         res.status(404).send({
