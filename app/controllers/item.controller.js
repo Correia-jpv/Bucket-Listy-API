@@ -29,8 +29,8 @@ exports.create = (req, res) => {
 
 // Retrieve all Items
 exports.findAll = (req, res) => {
-  const name = req.query.name;
-  var condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
+  const item = req.query.name;
+  var condition = item ? { name: { $regex: new RegExp(item), $options: "i" } } : {};
 
   Item.find(condition)
     .then(data => {
@@ -43,24 +43,24 @@ exports.findAll = (req, res) => {
     });
 };
 
-// Find a single Item with an id
+// Find a single Item with an name
 exports.findOne = (req, res) => {
-  const id = req.params.id;
+  const item = req.params.item;
 
-  Item.findById(id)
+  Item.find({ "name": item })
     .then(data => {
       if (!data)
-        res.status(404).send({ message: "Not found Item with id " + id });
+        res.status(404).send({ message: "Not found Item with name " + item });
       else res.send(data);
     })
     .catch(err => {
       res
         .status(500)
-        .send({ message: "Error retrieving Item with id=" + id });
+        .send({ message: "Error retrieving Item with name =" + item });
     });
 };
 
-// Update an Item by the id in the request
+// Update an Item by the name in the request
 exports.update = (req, res) => {
   if (!req.body) {
     return res.status(400).send({
@@ -68,32 +68,32 @@ exports.update = (req, res) => {
     });
   }
 
-  const id = req.params.id;
+  const item = req.params.name;
 
-  Item.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+  Item.findBynameAndUpdate(item, req.body, { useFindAndModify: false })
     .then(data => {
       if (!data) {
         res.status(404).send({
-          message: `Cannot update Item with id=${id}. Maybe Item was not found!`
+          message: `Cannot update Item with name =${item}. Maybe Item was not found!`
         });
       } else res.send({ message: "Item was updated successfully." });
     })
     .catch(err => {
       res.status(500).send({
-        message: "Error updating Item with id=" + id
+        message: "Error updating Item with name =" + item
       });
     });
 };
 
-// Delete an Item with the id in the request
+// Delete an Item with the name in the request
 exports.delete = (req, res) => {
-  const id = req.params.id;
+  const item = req.params.name;
 
-  Item.findByIdAndRemove(id)
+  Item.findBynameAndRemove(item)
     .then(data => {
       if (!data) {
         res.status(404).send({
-          message: `Cannot delete Item with id=${id}. Maybe Item was not found!`
+          message: `Cannot delete Item with name=${item}. Maybe Item was not found!`
         });
       } else {
         res.send({
@@ -103,7 +103,7 @@ exports.delete = (req, res) => {
     })
     .catch(err => {
       res.status(500).send({
-        message: "Could not delete Item with id=" + id
+        message: "Could not delete Item with name=" + item
       });
     });
 };

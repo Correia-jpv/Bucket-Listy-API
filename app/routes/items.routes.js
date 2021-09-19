@@ -9,14 +9,14 @@ module.exports = app => {
   // Retrieve all Items
   router.get("/", items.findAll);
 
-  // Retrieve a single Item with id
-  router.get("/:id", items.findOne);
+  // Retrieve a single Item with name
+  router.get("/:name", items.findOne);
 
-  // Update a Item with id
-  router.put("/:id", items.update);
+  // Update a Item with name
+  router.put("/:name", items.update);
 
-  // Delete a Item with id
-  router.delete("/:id", items.delete);
+  // Delete a Item with name
+  router.delete("/:name", items.delete);
 
   // Delete all Items
   router.delete("/", items.deleteAll);
