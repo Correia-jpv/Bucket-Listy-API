@@ -186,7 +186,7 @@ exports.deleteItemFromUser = (req, res) => {
   const item = req.params.item;
 
 
-  User.update({ "idToken": token }, { $pull: { items: { item: item } } })
+  User.update({ "idToken": user }, { $pull: { items: { item: item } } })
     .then(data => {
       if (!data) {
         res.status(404).send({
