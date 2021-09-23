@@ -246,6 +246,7 @@ exports.findByIdToken = (req, res) => {
     .then(async data => {
       if (!data || data.length == 0) {
         // TODO: Query LoginRadius API with token to retrieve user's name, etc
+        req.body.idToken = token;
         this.create(req, res)
           // res.status(404).send({ message: "Not found User with idToken " + token });
       } else res.send(data);
