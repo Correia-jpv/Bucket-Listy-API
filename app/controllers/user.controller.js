@@ -242,7 +242,7 @@ exports.deleteItemFromUser = async(req, res) => {
 exports.findByIdToken = (req, res) => {
   const token = req.params.token;
 
-  User.find({ idToken: token })
+  User.findOne({ idToken: token })
     .then(async data => {
       if (!data || data.length == 0) {
         // TODO: Query LoginRadius API with token to retrieve user's name, etc
