@@ -43,9 +43,26 @@ exports.findAll = (req, res) => {
     });
 };
 
+// Find a single Item by id
+exports.findOneById = (req, res) => {
+  const item = req.params.id;
+
+  Item.findOne({ "_id": item })
+    .then(data => {
+      if (!data)
+        res.status(404).send({ message: "Not found Item with id " + item });
+      else res.send(data);
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .send({ message: "Error retrieving Item with id =" + item });
+    });
+};
+
 // Find a single Item with an name
 exports.findOne = (req, res) => {
-  const item = req.params.item;
+  const item = req.params.name;
 
   Item.find({ "name": item })
     .then(data => {

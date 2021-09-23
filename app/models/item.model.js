@@ -3,7 +3,10 @@ module.exports = mongoose => {
     "item",
     mongoose.Schema({
       name: String,
-      checked: Boolean,
+      // category: {
+      //   type: mongoose.Schema.Types.ObjectId,
+      //   ref: "Category",
+      // },
     })
   );
 

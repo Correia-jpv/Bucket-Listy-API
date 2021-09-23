@@ -9,6 +9,9 @@ module.exports = app => {
   // Retrieve all Items
   router.get("/", items.findAll);
 
+  // Retrieve a single Item with id
+  router.get("/id/:id", items.findOneById);
+
   // Retrieve a single Item with name
   router.get("/:name", items.findOne);
 

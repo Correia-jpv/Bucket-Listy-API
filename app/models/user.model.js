@@ -5,13 +5,15 @@ module.exports = mongoose => {
       name: String,
       idToken: String,
       items: [{
-        // type: mongoose.Schema.Types.ObjectId,
-        // ref: "Item",
-        item: String,
-        checked: Boolean
-      }]
+        item: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Item",
+          unique: true,
+          sparse: true
+        },
+        checked: { type: Boolean, default: false }
+      }],
     })
   );
-
   return User;
 };

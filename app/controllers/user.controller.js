@@ -1,10 +1,11 @@
 const db = require("../models");
 const User = db.users;
+const Item = db.items;
 
 // Create and Save a new User
 exports.create = (req, res) => {
   // Validate request
-  if (!req.body.name || !req.body.idToken) {
+  if (!req.body.idToken) {
     res.status(400).send({ message: "Content can not be empty!" });
     return;
   }
@@ -23,7 +24,7 @@ exports.create = (req, res) => {
     })
     .catch(err => {
       res.status(500).send({
-        message: err.message || "Some error occurred while creating the Item."
+        message: err.message || "Some error occurred while creating user."
       });
     });
 };
@@ -31,7 +32,7 @@ exports.create = (req, res) => {
 // Retrieve all Users
 exports.findAll = (req, res) => {
   const name = req.query.name;
-  var condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
+  let condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
 
   User.find(condition)
     .then(data => {
@@ -124,8 +125,8 @@ exports.deleteAll = (req, res) => {
     });
 };
 
-// Add an item to a User with id
-exports.addItemToUser = (req, res) => {
+// Add an item to a User with token
+exports.addItemToUser = async(req, res) => {
   if (!req.body) {
     return res.status(400).send({
       message: "Data to add item can not be empty!"
@@ -134,26 +135,49 @@ exports.addItemToUser = (req, res) => {
 
   const user = req.params.user;
   const itemChecked = req.body.checked;
-  const item = { item: req.body.item, checked: itemChecked };
+  const itemName = req.body.item;
 
+  // Verify if item already exists in DB or add it to DB. If it exists then check if user already has it  
 
-  User.update({ "idToken": user }, { $push: { items: item } }, { new: true })
-    .then(data => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot add Item ${item} to User ${user}.`
-        });
-      } else res.send({ message: "User's Item was added successfully." });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Error adding Item ${item} to User ${user}.`
-      });
+  let item = await Item.findOne({ "name": itemName }),
+    itemExists;
+
+  if (!item) {
+    const newItem = new Item({
+      name: itemName
     });
+    await newItem.save(newItem);
+
+    item = await Item.findOne({ "name": itemName });
+  } else {
+    itemExists = await User.findOne({ "items.item": item._id });
+
+    if (itemExists) {
+      res.status(200).send({
+        message: `User ${user} already has item ${item.name}`
+      });
+    }
+  }
+
+  if (!itemExists) {
+    User.updateOne({ "idToken": user }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false })
+      .then(data => {
+        if (!data) {
+          res.status(404).send({
+            message: `Cannot add Item ${item} to User ${user}.`
+          });
+        } else res.send({ message: "User's Item was added successfully." });
+      })
+      .catch(err => {
+        res.status(500).send({
+          message: `Error adding Item ${item} to User ${user}.`
+        });
+      });
+  }
 };
 
-// Update an item from a User with id
-exports.updateItemFromUser = (req, res) => {
+// Update an item from a User with token
+exports.updateItemFromUser = async(req, res) => {
   if (!req.body) {
     return res.status(400).send({
       message: "Data to update can not be empty!"
@@ -161,44 +185,57 @@ exports.updateItemFromUser = (req, res) => {
   }
 
   const user = req.params.user;
-  const item = req.params.item;
+  const itemName = req.params.item;
   const itemChecked = req.body.checked;
 
+  let item = await Item.findOne({ "name": itemName })
 
-  User.update({ "idToken": user, "items.item": item }, { "$set": { "items.$.checked": itemChecked } })
-    .then(data => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot update Item ${item} from User ${user}.`
+  if (item) {
+    User.updateOne({ "idToken": user, "items.item": item._id }, { "$set": { "items.$.checked": itemChecked } })
+      .then(data => {
+        if (!data) {
+          res.status(404).send({
+            message: `Cannot update Item ${itemName} from User ${user}.`
+          });
+        } else res.send({ message: "User's Item was updated successfully." });
+      })
+      .catch(err => {
+        res.status(500).send({
+          message: `Error updating Item ${item} from User ${user}.`
         });
-      } else res.send({ message: "User's Item was updated successfully." });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Error updating Item ${item} from User ${user}.`
       });
+  } else {
+    res.status(404).send({
+      message: `Cannot update Item ${itemName} from User ${user}. Item not found`
     });
+  }
 }
 
-// Delete an item from a User with id
-exports.deleteItemFromUser = (req, res) => {
+// Delete an item from a User with token
+exports.deleteItemFromUser = async(req, res) => {
   const user = req.params.user;
-  const item = req.params.item;
+  const itemName = req.params.item;
 
-
-  User.update({ "idToken": user }, { $pull: { items: { item: item } } })
-    .then(data => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot add Item ${item} to User ${user}.`
+  let item = await Item.findOne({ "name": itemName })
+  if (item) {
+    User.updateOne({ "idToken": user }, { $pull: { items: { item: item._id } } })
+      .then(data => {
+        if (!data) {
+          res.status(404).send({
+            message: `Cannot delete Item ${itemName} from User ${user}.`
+          });
+        } else res.send({ message: "User's Item was deleted successfully." });
+      })
+      .catch(err => {
+        res.status(500).send({
+          message: `Error deleting Item ${itemName} from User ${user}.`
         });
-      } else res.send({ message: "User's Item was added successfully." });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Error adding Item ${item} to User ${user}.`
       });
+  } else {
+    res.status(404).send({
+      message: `Cannot delete Item ${itemName} from User ${user}. Item not found`
     });
+  }
 };
 
 // Find User by Google Signin id Token
@@ -206,10 +243,12 @@ exports.findByIdToken = (req, res) => {
   const token = req.params.token;
 
   User.find({ idToken: token })
-    .then(data => {
-      if (!data || data.length == 0)
-        res.status(404).send({ message: "Not found User with idToken " + token });
-      else res.send(data);
+    .then(async data => {
+      if (!data || data.length == 0) {
+        // TODO: Query LoginRadius API with token to retrieve user's name, etc
+        this.create(req, res)
+          // res.status(404).send({ message: "Not found User with idToken " + token });
+      } else res.send(data);
     })
     .catch(err => {
       res
