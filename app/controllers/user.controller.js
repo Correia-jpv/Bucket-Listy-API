@@ -1,6 +1,25 @@
-const db = require("../models");
-const User = db.users;
-const Item = db.items;
+const db = require("../models"),
+  User = db.users,
+  Item = db.items,
+  {
+    API_KEY,
+    API_SECRET,
+    SITE_NAME
+  } = process.env,
+  config = {
+    apiDomain: 'api.loginradius.com',
+    apiKey: API_KEY,
+    apiSecret: API_SECRET,
+    siteName: SITE_NAME,
+    apiRequestSigning: false,
+    proxy: {
+      host: '',
+      port: '',
+      user: '',
+      password: ''
+    }
+  },
+  lrv2 = require('loginradius-sdk')(config);
 
 // Create and Save a new User
 exports.create = (req, res) => {
@@ -62,7 +81,7 @@ exports.findOne = (req, res) => {
     });
 };
 
-// Update a Item with the id in the request
+// Update a User with the id in the request
 exports.update = (req, res) => {
   if (!req.body) {
     return res.status(400).send({
@@ -150,7 +169,7 @@ exports.addItemToUser = async(req, res) => {
 
     item = await Item.findOne({ "name": itemName });
   } else {
-    itemExists = await User.findOne({ "items.item": item._id });
+    itemExists = await User.findOne({ "idToken": user }, { "items.item": item._id });
 
     if (itemExists) {
       res.status(200).send({
@@ -239,21 +258,43 @@ exports.deleteItemFromUser = async(req, res) => {
 };
 
 // Find User by Google Signin id Token
-exports.findByIdToken = (req, res) => {
+exports.findByIdToken = async(req, res) => {
   const token = req.params.token;
 
-  User.findOne({ idToken: token })
-    .then(async data => {
-      if (!data || data.length == 0) {
-        // TODO: Query LoginRadius API with token to retrieve user's name, etc
-        req.body.idToken = token;
-        this.create(req, res)
-          // res.status(404).send({ message: "Not found User with idToken " + token });
-      } else res.send(data);
-    })
-    .catch(err => {
-      res
-        .status(500)
-        .send({ message: "Error retrieving User with idToken " + token });
-    });
+  let profile = await getLoginRadiusProfile(token)
+  if (profile) {
+    const uid = profile["ID"],
+      name = profile["FullName"];
+
+    User.findOne({ idToken: uid })
+      .then(async data => {
+        if (!data || data.length == 0) {
+          req.body.name = name;
+          req.body.idToken = uid;
+          this.create(req, res)
+        } else res.send(data);
+      })
+      .catch(err => {
+        res
+          .status(500)
+          .send({ message: "Error retrieving User with id " + uid });
+      });
+  } else res
+    .status(500)
+    .send({ message: "Error retrieving User with idToken " + token });
 };
+
+async function getLoginRadiusProfile(token) {
+  return await lrv2.authenticationApi.getProfileByAccessToken(token)
+    .then(data => {
+      if (!data) {
+        return null
+      } else {
+        const profile = data["Identities"][0];
+        return profile
+      }
+    })
+    .catch((error) => {
+      return null
+    });
+}
