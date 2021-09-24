@@ -152,14 +152,17 @@ exports.addItemToUser = async(req, res) => {
     });
   }
 
-  const user = req.params.user;
-  const itemChecked = req.body.checked;
-  const itemName = req.body.item;
+  const user = req.params.user,
+    itemChecked = req.body.checked,
+    itemName = req.body.item;
+
+  let profile = await getLoginRadiusProfile(user)
+  const uid = profile["ID"]
 
   // Verify if item already exists in DB or add it to DB. If it exists then check if user already has it  
 
   let item = await Item.findOne({ "name": itemName }),
-    itemExists;
+    userHasItem;
 
   if (!item) {
     const newItem = new Item({
@@ -169,17 +172,16 @@ exports.addItemToUser = async(req, res) => {
 
     item = await Item.findOne({ "name": itemName });
   } else {
-    itemExists = await User.findOne({ "idToken": user }, { "items.item": item._id });
-
-    if (itemExists) {
+    userHasItem = await User.findOne({ "idToken": uid, "items.item": item._id });
+    if (userHasItem) {
       res.status(200).send({
         message: `User ${user} already has item ${item.name}`
       });
     }
   }
 
-  if (!itemExists) {
-    User.updateOne({ "idToken": user }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false })
+  if (!userHasItem) {
+    User.updateOne({ "idToken": uid }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false })
       .then(data => {
         if (!data) {
           res.status(404).send({
@@ -207,10 +209,13 @@ exports.updateItemFromUser = async(req, res) => {
   const itemName = req.params.item;
   const itemChecked = req.body.checked;
 
+  let profile = await getLoginRadiusProfile(user)
+  const uid = profile["ID"]
+
   let item = await Item.findOne({ "name": itemName })
 
   if (item) {
-    User.updateOne({ "idToken": user, "items.item": item._id }, { "$set": { "items.$.checked": itemChecked } })
+    User.updateOne({ "idToken": uid, "items.item": item._id }, { "$set": { "items.$.checked": itemChecked } })
       .then(data => {
         if (!data) {
           res.status(404).send({
@@ -219,6 +224,7 @@ exports.updateItemFromUser = async(req, res) => {
         } else res.send({ message: "User's Item was updated successfully." });
       })
       .catch(err => {
+        console.log(err)
         res.status(500).send({
           message: `Error updating Item ${item} from User ${user}.`
         });
@@ -235,9 +241,12 @@ exports.deleteItemFromUser = async(req, res) => {
   const user = req.params.user;
   const itemName = req.params.item;
 
+  let profile = await getLoginRadiusProfile(user)
+  const uid = profile["ID"]
+
   let item = await Item.findOne({ "name": itemName })
   if (item) {
-    User.updateOne({ "idToken": user }, { $pull: { items: { item: item._id } } })
+    User.updateOne({ "idToken": uid }, { $pull: { items: { item: item._id } } })
       .then(data => {
         if (!data) {
           res.status(404).send({
