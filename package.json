@@ -4,9 +4,9 @@
   "description": "Node.js Restful CRUD API with Node.js, Express and MongoDB",
   "main": "server.js",
   "scripts": {
-    "build": "npm run generate-jsdoc",
+    "start": "npm run generate-jsdoc",
     "generate-jsdoc": "jsdoc -c ./documentation/jsdoc/jsdoc.json -t ./node_modules/ink-docstrap/template -R ./documentation/jsdoc/README.md -r .",
-    "postgenerate-jsdoc": "npm start"
+    "postgenerate-jsdoc": "node server.js"
   },
   "keywords": [
     "nodejs",
