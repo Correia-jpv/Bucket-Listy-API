@@ -1,28 +1,97 @@
+/**
+ * Express router providing Item related routes
+ * @module ItemRouter
+ * @requires express
+ * @requires ItemController Item related CRUD operations
+ */
 module.exports = app => {
-  const items = require("../controllers/item.controller.js");
+  /**
+   * ItemController module
+   * @const
+   */
+  const items = require("../controllers/item.controller.js")
 
-  var router = require("express").Router();
+  /**
+   * express module
+   * @const
+   */
+  const express = require("express")
 
-  // Create a new Item
+  /**
+   * Express router to mount Item related CRUD operations on.
+   * @const 
+   */
+  const router = express.Router()
+
+  /**
+   * Create a new Item
+   * @name post/create
+   * @see module:ItemController~create
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
   router.post("/", items.create);
 
-  // Retrieve all Items
+  /**
+   * Retrieve all Items
+   * @name get/findAll
+   * @see module:ItemController~findAll
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
   router.get("/", items.findAll);
 
-  // Retrieve a single Item with id
-  router.get("/id/:id", items.findOneById);
+  /**
+   * Delete all Items
+   * @name delete/deleteAll
+   * @see module:ItemController~deleteAll
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
+  router.delete("/", items.deleteAll);
 
-  // Retrieve a single Item with name
+  /**
+   * Retrieve a single Item with name
+   * @name get/findOne
+   * @see module:ItemController~findOne
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
   router.get("/:name", items.findOne);
 
-  // Update a Item with name
+  /**
+   * Update a Item with name
+   * @name put/update
+   * @see module:ItemController~update
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
   router.put("/:name", items.update);
 
-  // Delete a Item with name
+  /**
+   * Delete a Item with name
+   * @name delete
+   * @see module:ItemController~delete
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
   router.delete("/:name", items.delete);
 
-  // Delete all Items
-  router.delete("/", items.deleteAll);
+  /**
+   * Retrieve a single Item with ID
+   * @name get/findOneById
+   * @see module:ItemController~findOneById
+   * @function
+   * @param {string} path Express path
+   * @param {callback} middleware Express middleware.
+   */
+  router.get("/id/:id", items.findOneById);
 
   app.use('/api/items', router);
 };

@@ -1,22 +1,38 @@
+// Swagger API documentation configuration
+const swaggerUi = require('swagger-ui-express'),
+  customSwaggerTheme = "../documentation/swagger-ui/theme-monokai.css",
+  YAML = require('yamljs'),
+  swaggerDocument = YAML.load('./documentation/swagger-ui/definitions.yaml'),
+  swaggerTheme = {
+    customCssUrl: customSwaggerTheme
+  };
+
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
 
-const app = express();
-
-var corsOptions = {
-  origin: "*"
-};
+const express = require("express"),
+  cors = require("cors"),
+  app = express(),
+  corsOptions = {
+    origin: "*"
+  }
 
 app.use(cors(corsOptions));
 
-// parse requests of content-type - application/json
+// Parse requests of content-type - application/json
 app.use(express.json());
 
-// parse requests of content-type - application/x-www-form-urlencoded
+// Parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
+// Custom Swagger theme
+app.get('/documentation/swagger-ui/theme-monokai.css', (req, res) => {
+  res.sendFile('./documentation/swagger-ui/theme-monokai.css', { root: __dirname });
+});
+
+// Database config. User and Item models
 const db = require("./app/models");
+
+// Database connection
 db.mongoose
   .connect(db.url, {
     useNewUrlParser: true,
@@ -30,15 +46,19 @@ db.mongoose
     process.exit();
   });
 
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Bucket Listy API" });
-});
+// JSDoc API documentation routing
+app.use('/docs/jsdoc', express.static(__dirname + '/documentation/jsdoc/generated'));
 
+// Swagger API documentation routing
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerTheme));
+
+// Item routes
 require("./app/routes/items.routes")(app);
+
+// User routes
 require("./app/routes/users.routes")(app);
 
-// set port, listen for requests
+// Set port, listen for requests
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);

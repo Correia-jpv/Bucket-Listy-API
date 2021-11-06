@@ -1,0 +1,1170 @@
+openapi: 3.0.3
+info: 
+  title: Bucket Listy API Playground
+  version: '0.1'
+  description: |
+  
+    This is a REST API with CRUD operations made with NodeJS and Express.
+
+    Use the api key `special-key` to test the authorization filters.
+
+    Source on [GitHub](https://github.com/Correia-jpv/Bucket-Listy-API)
+
+    [Bucket Listy](https://bucketlisty.com/)
+
+    [API Documentation](./jsdoc)
+  license: 
+    name: Licensed Under MIT
+    url: https://spdx.org/licenses/MIT.html
+servers: 
+  - url: /api
+    description: Main (production) server
+  - url: http://localhost/api
+    description: Local staging server
+tags:
+  - name: "item"
+    description: "An item belonging to users' bucket lists"
+  - name: "user"
+    description: "A user which has items in its bucket list"
+  
+paths:
+  /items/:
+    post:
+      tags:
+        - "item"
+      summary: Create a new item
+      description: Create a new Item for Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Item's name
+                  example: Lorem Ipsum
+      responses:
+        200:
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+
+        400:
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingParameters"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        500:
+          description: Error creating Item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error creating Item 'Lorem Ipsum'
+
+    get:
+      tags:
+        - "item"
+      summary: Retrieve all Items
+      description: Get a list of items from Bucket Listy. __Can be used to test the API with the auth key `special-key`__ 
+      responses:
+        200:
+          description: All Items retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        500:
+          description: Error retrieving all Items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error retrieving all Items
+
+    delete:
+      tags:
+        - "item"
+      summary: Delete all Items
+      description: Delete every item from Bucket Listy.
+      responses:
+        200:
+          description: Deleted all Items successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: N items were deleted successfully!
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        500:
+          description: Error deleting all Items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error deleting all Items
+
+  /items/{name}:
+    get:
+      tags:
+        - "item"
+      summary: Retrieve a single Item by name
+      description: Get an item's details from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Item's name
+          schema:
+            type: string
+            example: Lorem Ipsum
+      responses:
+        200:
+          description: Item retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Item with name 'Lorem Ipsum' was not found
+
+        500:
+          description: Error retrieving Item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error retrieving Item with name 'Lorem Ipsum'
+
+    put:
+      tags:
+        - "item"
+      summary: Update a Item by name
+      description: Edit an item's details from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Item's name
+          schema:
+            type: string
+            example: Lorem Ipsum        
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: Item updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Item was updated successfully
+
+        400:
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingParameters"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't update Item with name 'Lorem Ipsum'. Item may not exist
+
+        500:
+          description: Error updating Item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error updating Item with name 'Lorem Ipsum'
+
+    delete:
+      tags:
+        - "item"
+      summary: Delete a Item by name
+      description: Delete an item from Bucket Listy.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Item's name
+          schema:
+            type: string
+            example: Lorem Ipsum
+      responses:
+        200:
+          description: Item deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Item was deleted successfully
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't delete Item with name 'Lorem Ipsum'. Item may not exist
+
+        500:
+          description: Error deleting Item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error deleting Item with name 'Lorem Ipsum'
+
+  /items/id/{id}:
+    get:
+      tags:
+        - "item"
+      summary: Retrieve a single Item by ID
+      description: Get an item's details from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item's ID
+          schema:
+            type: string
+            example: 614de751767739fcc707d1f6
+      responses:
+        200:
+          description: Item retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Item with ID '617eb79e94b5390c9754b7ef' was not found
+
+        500:
+          description: Error retrieving Item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error retrieving Item with ID '617eb79e94b5390c9754b7ef'
+
+
+  /users/:
+    post:
+      tags:
+        - "user"
+      summary: Create a new User
+      description: Create a new User for Bucket Listy.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idToken
+              properties:
+                idToken:
+                  type: number
+                  description: "User's social authentication ID token"
+                  example: 110530275267182941609
+                name:
+                  type: string
+                  description: "User's name"
+                  example: John Doe
+      responses:
+        200:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+        400:
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingParameters"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        500:
+          description: Error creating User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error creating User
+
+    get:
+      tags:
+        - "user"
+      summary: Retrieve all Users
+      description: Get a list of users from Bucket Listy.
+      responses:
+        200:
+          description: All Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        500:
+          description: Error retrieving all Users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error retrieving all Users
+
+    delete:
+      tags:
+        - "user"
+      summary: Delete all Users
+      description: Delete every user from Bucket Listy.
+      responses:
+        200:
+          description: Deleted all Users successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: N users were deleted successfully
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        500:
+          description: Error deleting all Users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error deleting all Users
+
+  /users/token/{token}:
+    get:
+      tags:
+        - "user"
+      summary: Retrieve a single User by social authentication ID token
+      description: Get an user's details from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: User's social authentication ID token
+          schema:
+            type: string
+            example: c493e28e-5299-4fae-acfe-0533b2b98932
+      responses:
+        200:
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: User with ID token '110530373268172941609' was not found
+
+        500:
+          description: Error retrieving User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error retrieving User with ID token '110530373268172941609'
+
+  /users/{id}:
+    get:
+      tags:
+        - "user"
+      summary: Retrieve a single User by ID
+      description: Get an user's details from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User's ID
+          schema:
+            type: string
+            example: 614de751767739fcc708d1f6
+      responses:
+        200:
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: User with ID '614de751767739fcc708d1f6' was not found
+
+        500:
+          description: Error retrieving User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error retrieving User with ID '614de751767739fcc708d1f6'
+    
+    put:
+      tags:
+        - "user"
+      summary: Update a User by ID
+      description: Edit an User's details from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User's ID
+          schema:
+            type: string
+            example: 614de751767739fcc708d1f6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: User was updated successfully
+
+        400:
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingParameters"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't update User with ID '614de751767739fcc708d1f6'. User may not exist
+
+        500:
+          description: Error updating User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error updating User with ID '614de751767739fcc708d1f6'
+
+    delete:
+      tags:
+        - "user"
+      summary: Delete a User by ID
+      description: Delete an user from Bucket Listy. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User's ID
+          schema:
+            type: string
+            example: 614de751767739fcc708d1f6
+      responses:
+        200:
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: User was deleted successfully
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't delete User with ID '614de751767739fcc708d1f6'. User may not exist
+
+        500:
+          description: Error deleting User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error deleting User with ID '614de751767739fcc708d1f6'
+
+  /users/{user}/:
+    post:
+      tags:
+        - "user"
+      summary: Add an Item to a User
+      description: Add an Item to a User's bucket list of items with the User's ID token. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: user
+          in: path
+          required: true
+          description: User's ID
+          schema:
+            type: string
+            example: 614de751767739fcc708d1f6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - item
+              properties:
+                item:
+                  type: string
+                  description: "Item's name"
+                  example: Lorem Ipsum
+                checked:
+                  type: boolean
+                  description: "Item's checked status"
+                  example: true
+      responses:
+        200:
+          description: Item added to User successfully
+          content:
+            application/json:
+              schema:
+                example: Item 'Lorem Ipsum' was added to the User successfully
+
+        400:
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingParameters"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't add Item 'Lorem Ipsum' to the User. User may not exist
+
+        406:
+          description: Item already added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: User already has Item 'Lorem Ipsum'
+
+        500:
+          description: Error adding Item to User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error adding Item 'Lorem Ipsum' to the User
+
+  /users/{user}/{item}:
+    put:
+      tags:
+        - "user"
+      summary: Update an Item from a User
+      description: Update an Item's checked status from a User's bucket list of items with the User's ID token. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: user
+          in: path
+          required: true
+          description: User's ID
+          schema:
+            type: string
+            example: 614de751767739fcc708d1f6
+        - name: item
+          in: path
+          required: true
+          description: Item's name
+          schema:
+            type: string
+            example: Lorem Ipsum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - checked
+              properties:
+                checked:
+                  type: boolean
+                  description: "Item's checked status"
+                  example: true
+      responses:
+        200:
+          description: Item from User updated successfully
+          content:
+            application/json:
+              schema:
+                example: Item 'Lorem Ipsum' from the User was updated successfully
+
+        400:
+          description: Missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingParameters"
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't update Item 'Lorem Ipsum' from the User. User may not exist
+
+        500:
+          description: Error updating Item from User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error updating Item 'Lorem Ipsum' from the User
+    
+    delete:
+      tags:
+        - "user"
+      summary: Delete an Item from a User
+      description: Delete an Item from a User's bucket list of items with the User's ID token. __Can be used to test the API with the auth key `special-key`__
+      parameters:
+        - name: user
+          in: path
+          required: true
+          description: User's ID
+          schema:
+            type: string
+            example: 614de751767739fcc708d1f6
+        - name: item
+          in: path
+          required: true
+          description: Item's name
+          schema:
+            type: string
+            example: Lorem Ipsum
+      responses:
+        200:
+          description: Item from User delete successfully
+          content:
+            application/json:
+              schema:
+                example: Item 'Lorem Ipsum' from the User was deleted successfully
+
+        401:
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthenticated"
+
+        403:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Can't delete Item 'Lorem Ipsum' from the User. User may not exist
+
+        500:
+          description: Error deleting Item from User
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: response's message
+                    example: Error deleting Item 'Lorem Ipsum' from the User
+
+
+components:
+  schemas:
+    Item:
+      type: object
+      required:
+        - _id
+        - name
+      properties:
+        _id: 
+          type: string
+          description: Item ID
+          example: 614de08d767739fcc707d158
+        name:
+          type: string
+          description: Item name
+          example: Be in the Newspaper
+
+    User:
+      type: object
+      required:
+        - _id
+        - idToken
+      properties:
+        _id:
+          type: string
+          description: User ID
+          example: 614de08d767739fcc707d158
+        name:
+          type: string
+          description: User name
+          example: John Doe
+        idToken:
+          type: number
+          description: User ID token for social authentication
+          example: 110560273267872941609
+        items:
+          type: array
+          items: 
+            $ref: "#/components/schemas/Item"
+
+    MissingParameters:
+      type: object
+      properties:
+        message:
+          type: string
+          description: response's message
+          example: Request is missing required parameters
+
+    Unauthenticated:
+      type: object
+      properties:
+        message:
+          type: string
+          description: response's message
+          example: Missing authentication header
+
+    Unauthorized:
+      type: object
+      properties:
+        message:
+          type: string
+          description: response's message
+          example: You have no authorization to complete this operation
+
+
+  securitySchemes:
+    AccessKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+security:
+  - AccessKey: []

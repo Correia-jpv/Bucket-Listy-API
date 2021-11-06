@@ -1,15 +1,23 @@
+/**
+ * User related CRUD operations
+ * @module UserController
+ * @see User
+ */
+
 const db = require("../models"),
   User = db.users,
   Item = db.items,
   {
-    API_KEY,
-    API_SECRET,
+    PUBLIC_API_KEY,
+    MASTER_API_KEY,
+    API_KEY_LOGIN_RADIUS,
+    API_SECRET_LOGIN_RADIUS,
     SITE_NAME
   } = process.env,
   config = {
     apiDomain: 'api.loginradius.com',
-    apiKey: API_KEY,
-    apiSecret: API_SECRET,
+    apiKey: API_KEY_LOGIN_RADIUS,
+    apiSecret: API_SECRET_LOGIN_RADIUS,
     siteName: SITE_NAME,
     apiRequestSigning: false,
     proxy: {
@@ -21,289 +29,561 @@ const db = require("../models"),
   },
   lrv2 = require('loginradius-sdk')(config);
 
-// Create and Save a new User
+/**
+ * **Create a new User**
+ * 
+ * with the auth ID token and name(optional) from the request's body
+ * @function create
+ * @param {Object} req POST request
+ * @param {Object} req.body request's body
+ * @param {Number} req.body.idToken user's auth ID token
+ * @param {string|undefined} [req.body.name] user's name
+ * 
+ * @param {Object} res response
+ * @param {User} res.user created User
+ */
 exports.create = (req, res) => {
-  // Validate request
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return
+  }
+  if (apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
+  // Validate request parameters
   if (!req.body.idToken) {
-    res.status(400).send({ message: "Content can not be empty!" });
+    res
+      .status(400)
+      .send({ message: "Request is missing required parameters" });
     return;
   }
 
   // Create a User
-  const user = new User({
-    name: req.body.name,
-    idToken: req.body.idToken
-  });
+  const name = req.body.name,
+    token = req.body.idToken,
+    user = new User({
+      name: name,
+      idToken: token
+    })
 
   // Save User in the database
-  user
-    .save(user)
+  user.save(user)
     .then(data => {
       res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while creating user."
-      });
-    });
-};
-
-// Retrieve all Users
-exports.findAll = (req, res) => {
-  const name = req.query.name;
-  let condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
-
-  User.find(condition)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while retrieving items."
-      });
-    });
-};
-
-// Find a single User with an id
-exports.findOne = (req, res) => {
-  const id = req.params.id;
-
-  User.findById(id)
-    .then(data => {
-      if (!data)
-        res.status(404).send({ message: "Not found User with id " + id });
-      else res.send(data);
     })
     .catch(err => {
       res
         .status(500)
-        .send({ message: "Error retrieving User with id " + id });
+        .send({ message: `Error creating User` });
     });
 };
 
-// Update a User with the id in the request
-exports.update = (req, res) => {
-  if (!req.body) {
-    return res.status(400).send({
-      message: "Data to update can not be empty!"
+/**
+ * **Retrieve all Users**
+ * @function findAll
+ * @param {Object} req GET request
+ * 
+ * @param {Object} res response
+ * @param {User[]} res.data list of users
+ */
+exports.findAll = (req, res) => {
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
+  // Get query string from the Request and consider it as condition for findAll() method.
+  const title = req.query.title,
+    condition = title ? { title: { $regex: new RegExp(title), $options: "i" } } : {}
+
+  User.find(condition, { __v: 0 })
+    .then(data => {
+      res.send(data);
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .send({ message: `Error retrieving all Users` });
     });
+};
+
+/**
+ * **Delete all Users**
+ * @function deleteAll
+ * @param {Object} req DELETE request
+ * 
+ * @param {Object} res response
+ */
+exports.deleteAll = (req, res) => {
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
+  User.deleteMany({})
+    .then(data => {
+      res.send({
+        message: `${data.deletedCount} Users were deleted successfully`
+      });
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .send({ message: `Error deleting all Users` });
+    });
+};
+
+/**
+ * **Find User by auth ID token**
+ * 
+ * with the auth ID token in the request's path
+ * @function findByIdToken
+ * @param {Object} req POST request
+ * @param {Object} req.params request's path parameters
+ * @param {Number} req.params.idToken user's auth ID token
+ * 
+ * @param {Object} res response
+ * @param {User} res.data found user
+ */
+exports.findByIdToken = async(req, res) => {
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
+  const token = req.params.token,
+    profile = await getLoginRadiusProfile(token)
+
+  if (profile) {
+    const uid = profile["ID"],
+      name = profile["FullName"];
+
+    User.findOne({ idToken: uid }, { __v: 0 })
+      .then(async data => {
+        if (!data) {
+          req.body.name = name;
+          req.body.idToken = uid;
+          this.create(req, res)
+        } else
+          res.send(data);
+      })
+      .catch(err => {
+        res
+          .status(404)
+          .send({ message: `User with ID token '${token}' was not found` });
+      });
+  } else
+    res
+    .status(500)
+    .send({ message: `Error retrieving User with ID token '${token}'` });
+};
+
+/**
+ * **Find a single User by ID**
+ * 
+ * with the ID in the request's path
+ * @function findOne
+ * @param {{params: {id: string}}} req GET request
+ * @param {Object} req.params request's path parameters
+ * @param {string} req.params.id user's ID
+ * 
+ * @param {Object} res response
+ * @param {User} res.data found user
+ */
+exports.findOne = (req, res) => {
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
   }
 
   const id = req.params.id;
 
-  User.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+  User.findById(id, { __v: 0 })
     .then(data => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot update User with id ${id}. Maybe Item was not found!`
-        });
-      } else res.send({ message: "User was updated successfully." });
+      if (!data)
+        res
+        .status(404)
+        .send({ message: `User with ID '${id}' was not found` });
+      else
+        res.send(data);
     })
     .catch(err => {
-      res.status(500).send({
-        message: "Error updating User with id " + id
-      });
+      res
+        .status(500)
+        .send({ message: `Error retrieving User with ID '${id}'` });
     });
 };
 
-// Delete a User with the id in the request
+/**
+ * **Update a User by ID**
+ * 
+ * with the ID in the request's path and the user's details from the request's body
+ * @function update
+ * @param {Object} req PUT request
+ * @param {Object} req.params request's path parameters
+ * @param {string} req.params.id user's ID
+ * @param {Object} req.body request's body
+ * @param {Number|undefined} [req.body.idToken] user's auth ID token
+ * @param {string|undefined} [req.body.name] user's name
+ * 
+ * @param {Object} res response
+ * @param {string} res.message message
+ */
+exports.update = (req, res) => {
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
+  // Validate request parameters
+  if (!req.body) {
+    res.status(400).send({
+      message: "Request is missing required parameters"
+    });
+    return
+  }
+
+  const id = req.params.id;
+
+  User.findByIdAndUpdate(id, req.body, { useFindAndModify: false }, { __v: 0 })
+    .then(data => {
+      if (!data) {
+        res.status(404).send({
+          message: `Can't update User with ID '${id}'. User may not exist`
+        });
+      } else res.send({ message: "User was updated successfully" });
+    })
+    .catch(err => {
+      res
+        .status(500)
+        .send({ message: `Error updating User with ID '${id}'` });
+    });
+};
+
+/**
+ * **Delete a User by ID**
+ * 
+ * with the ID in the request's path
+ * @function delete
+ * @param {Object} req DELETE request
+ * @param {Object} req.params request's path parameters
+ * @param {string} req.params.id user's ID
+ * 
+ * @param {Object} res response
+ * @param {string} res.message message
+ */
 exports.delete = (req, res) => {
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
   const id = req.params.id;
 
   User.findByIdAndRemove(id)
     .then(data => {
       if (!data) {
         res.status(404).send({
-          message: `Cannot delete User with id ${id}. Maybe User was not found!`
+          message: `Can't delete User with ID '${id}'. User may not exist`
         });
       } else {
         res.send({
-          message: "User was deleted successfully!"
+          message: "User was deleted successfully"
         });
       }
     })
     .catch(err => {
       res.status(500).send({
-        message: "Could not delete User with id " + id
+        message: `Error deleting User with ID '${id}'`
       });
     });
 };
 
-// Delete all Users
-exports.deleteAll = (req, res) => {
-  User.deleteMany({})
-    .then(data => {
-      res.send({
-        message: `${data.deletedCount} Users were deleted successfully!`
-      });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while removing all Users."
-      });
-    });
-};
-
-// Add an item to a User with token
+/**
+ * **Add an Item to a User's bucket list**
+ * 
+ * with the user's auth token from the request's path
+ * 
+ * and the item's name and checked status from the request's body
+ * @function addItemToUser
+ * @param {Object} req POST request
+ * @param {Object} req.params request's path parameters
+ * @param {string} req.params.user user's auth token
+ * @param {Object} req.body request's body
+ * @param {string} req.body.item item's name
+ * @param {boolean|undefined} [req.body.checked] item's checked status
+ * 
+ * @param {Object} res response
+ * @param {string} res.message message
+ */
 exports.addItemToUser = async(req, res) => {
-  if (!req.body) {
-    return res.status(400).send({
-      message: "Data to add item can not be empty!"
-    });
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
+
+  // Validate request parameters
+  if (!req.body.item) {
+    res
+      .status(400)
+      .send({ message: "Request is missing required parameters" });
+    return
   }
 
   const user = req.params.user,
+    itemName = req.body.item,
     itemChecked = req.body.checked,
-    itemName = req.body.item;
+    profile = await getLoginRadiusProfile(user),
+    uid = profile["ID"]
 
-  let profile = await getLoginRadiusProfile(user)
-  const uid = profile["ID"]
-
-  // Verify if item already exists in DB or add it to DB. If it exists then check if user already has it  
-
+  // Verify if item already exists in DB
   let item = await Item.findOne({ "name": itemName }),
     userHasItem;
 
   if (!item) {
+    // Item doesn't exist yet so we create it
     const newItem = new Item({
       name: itemName
     });
     await newItem.save(newItem);
 
+    // Retrieve the Item we just created to get its details
+    // And add it to the User's bucket list
     item = await Item.findOne({ "name": itemName });
   } else {
+    // Item already exists so we check if the User already has is on their bucket list
     userHasItem = await User.findOne({ "idToken": uid, "items.item": item._id });
     if (userHasItem) {
-      res.status(200).send({
-        message: `User ${user} already has item ${item.name}`
-      });
+      res
+        .status(403)
+        .send({
+          message: `User already has Item '${itemName}'`
+        });
     }
   }
 
+  // Add Item to the User's bucket list
   if (!userHasItem) {
-    User.updateOne({ "idToken": uid }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false })
+    User.updateOne({ "idToken": uid }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false }, { __v: 0 })
       .then(data => {
         if (!data) {
           res.status(404).send({
-            message: `Cannot add Item ${item} to User ${user}.`
+            message: `Can't add Item '${itemName}' to the User. User may not exist`
           });
-        } else res.send({ message: "User's Item was added successfully." });
+        } else res.send({ message: `Item '${itemName}' was added to the User successfully` });
       })
       .catch(err => {
         res.status(500).send({
-          message: `Error adding Item ${item} to User ${user}.`
+          message: `Error adding Item '${itemName}' to the User`
         });
       });
   }
 };
 
-// Update an item from a User with token
+/**
+ * **Update an item from a User with token**
+ * 
+ * with the user's auth ID token and the item's name on the request's path
+ * 
+ * and the item's checked status on the request's body
+ * @function updateItemFromUser
+ * @param {Object} req PUT request
+ * @param {Object} req.params request's path parameters
+ * @param {string} req.params.user user's auth token
+ * @param {string} req.params.item item's name
+ * @param {Object} req.body request's body
+ * @param {boolean} req.body.checked item's checked status
+ * 
+ * @param {Object} res response
+ * @param {string} res.message message
+ */
 exports.updateItemFromUser = async(req, res) => {
-  if (!req.body) {
-    return res.status(400).send({
-      message: "Data to update can not be empty!"
-    });
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
   }
 
-  const user = req.params.user;
-  const itemName = req.params.item;
-  const itemChecked = req.body.checked;
+  // Validate request parameters
+  if (!req.body) {
+    res
+      .status(400)
+      .send({ message: "Request is missing required parameters" });
+    return
+  }
 
-  let profile = await getLoginRadiusProfile(user)
-  const uid = profile["ID"]
-
-  let item = await Item.findOne({ "name": itemName })
+  const user = req.params.user,
+    itemName = req.params.item,
+    itemChecked = req.body.checked,
+    profile = await getLoginRadiusProfile(user),
+    uid = profile["ID"],
+    item = await Item.findOne({ "name": itemName })
 
   if (item) {
     User.updateOne({ "idToken": uid, "items.item": item._id }, { "$set": { "items.$.checked": itemChecked } })
       .then(data => {
         if (!data) {
           res.status(404).send({
-            message: `Cannot update Item ${itemName} from User ${user}.`
+            message: `Can't update Item '${itemName}' from the User. User may not exist`
           });
-        } else res.send({ message: "User's Item was updated successfully." });
+        } else res.send({ message: `Item '${itemName}' from the User was updated successfully` });
       })
       .catch(err => {
-        console.log(err)
-        res.status(500).send({
-          message: `Error updating Item ${item} from User ${user}.`
-        });
+        res.status(500)
+          .send({ message: `Error updating Item '${item}' from the User` });
       });
-  } else {
-    res.status(404).send({
-      message: `Cannot update Item ${itemName} from User ${user}. Item not found`
-    });
   }
 }
 
-// Delete an item from a User with token
+/**
+ * **Delete an item from a User with token**
+ * 
+ * with the user's auth ID token and the item's name on the request's path
+ * @function deleteItemFromUser
+ * @param {Object} req DELETE request
+ * @param {Object} req.params request's path parameters
+ * @param {string} req.params.user user's auth token
+ * @param {string} req.params.item item's name
+ * 
+ * @param {Object} res response
+ * @param {string} res.message message
+ */
 exports.deleteItemFromUser = async(req, res) => {
-  const user = req.params.user;
-  const itemName = req.params.item;
+  // Validate authentication and authorization
+  const apiKey = req.header('x-api-key')
+  if (!apiKey) {
+    res
+      .status(401)
+      .send({ message: "Missing authentication header" });
+    return;
+  }
+  if (apiKey !== PUBLIC_API_KEY && apiKey !== MASTER_API_KEY) {
+    res
+      .status(403)
+      .send({ message: "You have no authorization to complete this operation" });
+    return
+  }
 
-  let profile = await getLoginRadiusProfile(user)
-  const uid = profile["ID"]
+  const user = req.params.user,
+    itemName = req.params.item,
+    profile = await getLoginRadiusProfile(user),
+    uid = profile["ID"],
+    item = await Item.findOne({ "name": itemName })
 
-  let item = await Item.findOne({ "name": itemName })
   if (item) {
     User.updateOne({ "idToken": uid }, { $pull: { items: { item: item._id } } })
       .then(data => {
         if (!data) {
           res.status(404).send({
-            message: `Cannot delete Item ${itemName} from User ${user}.`
+            message: `Can't delete Item ${itemName} from the User. User may not exist`
           });
-        } else res.send({ message: "User's Item was deleted successfully." });
+        } else res.send({ message: `Item '${itemName}' from the User was deleted successfully` });
       })
       .catch(err => {
         res.status(500).send({
-          message: `Error deleting Item ${itemName} from User ${user}.`
+          message: `Error deleting Item '${itemName}' from the User`
         });
       });
-  } else {
-    res.status(404).send({
-      message: `Cannot delete Item ${itemName} from User ${user}. Item not found`
-    });
   }
 };
 
-// Find User by Google Signin id Token
-exports.findByIdToken = async(req, res) => {
-  const token = req.params.token;
-
-  let profile = await getLoginRadiusProfile(token)
-  if (profile) {
-    const uid = profile["ID"],
-      name = profile["FullName"];
-
-    User.findOne({ idToken: uid })
-      .then(async data => {
-        if (!data || data.length == 0) {
-          req.body.name = name;
-          req.body.idToken = uid;
-          this.create(req, res)
-        } else res.send(data);
-      })
-      .catch(err => {
-        res
-          .status(500)
-          .send({ message: "Error retrieving User with id " + uid });
-      });
-  } else res
-    .status(500)
-    .send({ message: "Error retrieving User with idToken " + token });
-};
-
+/**
+ * **Get User profile from Login Radius**
+ * @function getLoginRadiusProfile
+ * @param {string} token User's token
+ * @returns {Object|null} User's profile
+ */
 async function getLoginRadiusProfile(token) {
   return await lrv2.authenticationApi.getProfileByAccessToken(token)
-    .then(data => {
-      if (!data) {
-        return null
-      } else {
-        const profile = data["Identities"][0];
-        return profile
-      }
-    })
-    .catch((error) => {
-      return null
-    });
+    .then(data =>
+      (!data) ? null : data["Identities"][0]
+    )
+    .catch((error) => null);
 }

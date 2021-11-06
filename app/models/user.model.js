@@ -2,6 +2,14 @@ module.exports = mongoose => {
   const User = mongoose.model(
     "user",
     mongoose.Schema({
+      /**
+       * @class 
+       * @alias User
+       * @type {Object}
+       * @property {string} [name] - Name
+       * @property {string} idToken - Login token
+       * @property {Array<Item>} items - {@link Item} collection
+       */
       name: String,
       idToken: String,
       items: [{

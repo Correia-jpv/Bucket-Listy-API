@@ -1,0 +1,37 @@
+{
+  "source": {
+    "includePattern": ".js$",
+    "excludePattern": "(node_modules/|docs)",
+    "exclude": ["node_modules"]
+  },
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "opts": {
+    "recurse": true,
+    "destination": "./documentation/jsdoc/generated"
+  },
+  "plugins": ["plugins/markdown"],
+  "templates": {
+    "logoFile": "",
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "dateFormat": "ddd MMM Do YYYY",
+    "outputSourceFiles": true,
+    "outputSourcePath": true,
+    "systemName": "Bucket Listy API Documentation",
+    "footer": "",
+    "navType": "vertical",
+    "theme": "slate",
+    "linenums": true,
+    "collapseSymbols": false,
+    "inverseNav": true,
+    "protocol": "html://",
+    "methodHeadingReturns": false,
+    "syntaxTheme": "dark"
+  },
+  "markdown": {
+    "parser": "gfm",
+    "hardwrap": true
+  }
+}
