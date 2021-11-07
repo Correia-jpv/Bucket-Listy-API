@@ -8,7 +8,7 @@ This is a REST API with CRUD operations made with NodeJS and Express.
 
 [API Documentation](https://bucketlisty-api.herokuapp.com/docs/jsdoc)
 
-[GitHub Web app](https://github.com/Correia-jpv/Bucket-Listy-API)
+[GitHub Web app](https://github.com/Correia-jpv/Bucket-Listy)
 
 [GitHub API](https://github.com/Correia-jpv/Bucket-Listy-API)
 

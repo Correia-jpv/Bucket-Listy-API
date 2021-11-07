@@ -442,7 +442,7 @@ exports.addItemToUser = async(req, res) => {
 
   // Add Item to the User's bucket list
   if (!userHasItem) {
-    User.updateOne({ "idToken": uid }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false }, { __v: 0 })
+    User.updateOne({ "idToken": uid }, { $push: { items: { item: item._id, checked: itemChecked } } }, { new: true, useFindAndModify: false })
       .then(data => {
         if (!data) {
           res.status(404).send({
