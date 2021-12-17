@@ -20,7 +20,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
-    "express": "^4.17.1",
+    "express": "^4.17.2",
     "loginradius-sdk": "^11.2.0",
     "mongoose": "^6.1.2",
     "swagger-ui-express": "^4.2.0",
