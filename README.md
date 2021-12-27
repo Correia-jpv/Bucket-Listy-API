@@ -1,5 +1,7 @@
 # Bucket Listy API
 
+![Logo]
+
 ## Table of Contents
 
 - [Introduction]
@@ -104,6 +106,7 @@ If you find a bug, kindly open an [bug report issue](/../../issues/new?assignees
   [Swagger UI]:https://swagger.io/tools/swagger-ui/
   [JSDoc]:https://jsdoc.app/
   [Docstrap]:https://github.com/docstrap/docstrap
+  [Logo]:documentation/mockup-devices.png
 
   <!-- Contributing -->
   [issue]:https://github.com/correia-jpv/Bucket-Listy/issues/new
