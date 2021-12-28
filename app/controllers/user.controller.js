@@ -67,8 +67,8 @@ exports.create = (req, res) => {
   }
 
   // Create a User
-  const name = req.body.name,
-    token = req.body.idToken,
+  const name = sanitizeHtml(req.body.name),
+    token = sanitizeHtml(req.body.idToken),
     user = new User({
       name: name,
       idToken: token
@@ -111,7 +111,7 @@ exports.findAll = (req, res) => {
   }
 
   // Get query string from the Request and consider it as condition for findAll() method.
-  const title = req.query.title,
+  const title = sanitizeHtml(req.query.title),
     condition = title ? { title: { $regex: new RegExp(title), $options: "i" } } : {}
 
   User.find(condition, { __v: 0 })
@@ -189,7 +189,7 @@ exports.findByIdToken = async(req, res) => {
     return
   }
 
-  const token = req.params.token,
+  const token = sanitizeHtml(req.params.token),
     profile = await getLoginRadiusProfile(token)
 
   if (profile) {
@@ -244,7 +244,7 @@ exports.findOne = (req, res) => {
     return
   }
 
-  const id = req.params.id;
+  const id = sanitizeHtml(req.params.id);
 
   User.findById(id, { __v: 0 })
     .then(data => {
@@ -301,7 +301,7 @@ exports.update = (req, res) => {
     return
   }
 
-  const id = req.params.id;
+  const id = sanitizeHtml(req.params.id);
 
   User.findByIdAndUpdate(id, req.body, { useFindAndModify: false }, { __v: 0 })
     .then(data => {
@@ -346,7 +346,7 @@ exports.delete = (req, res) => {
     return
   }
 
-  const id = req.params.id;
+  const id = sanitizeHtml(req.params.id);
 
   User.findByIdAndRemove(id)
     .then(data => {
@@ -408,9 +408,9 @@ exports.addItemToUser = async(req, res) => {
     return
   }
 
-  const user = req.params.user,
-    itemName = req.body.item,
-    itemChecked = req.body.checked,
+  const user = sanitizeHtml(req.params.user),
+    itemName = sanitizeHtml(req.body.item),
+    itemChecked = sanitizeHtml(req.body.checked),
     profile = await getLoginRadiusProfile(user),
     uid = profile["ID"]
 
@@ -499,9 +499,9 @@ exports.updateItemFromUser = async(req, res) => {
     return
   }
 
-  const user = req.params.user,
-    itemName = req.params.item,
-    itemChecked = req.body.checked,
+  const user = sanitizeHtml(req.params.user),
+    itemName = sanitizeHtml(req.params.item),
+    itemChecked = sanitizeHtml(req.body.checked),
     profile = await getLoginRadiusProfile(user),
     uid = profile["ID"],
     item = await Item.findOne({ "name": itemName })
@@ -551,8 +551,8 @@ exports.deleteItemFromUser = async(req, res) => {
     return
   }
 
-  const user = req.params.user,
-    itemName = req.params.item,
+  const user = sanitizeHtml(req.params.user),
+    itemName = sanitizeHtml(req.params.item),
     profile = await getLoginRadiusProfile(user),
     uid = profile["ID"],
     item = await Item.findOne({ "name": itemName })

@@ -4,6 +4,7 @@
  * @see Item
  */
 
+import sanitizeHtml from 'sanitize-html'
 const db = require("../models"),
   Item = db.items,
   {
@@ -47,8 +48,8 @@ exports.create = (req, res) => {
     return;
   }
 
-  // Create a Item
-  const itemName = req.body.name,
+  // Create an Item
+  const itemName = sanitizeHtml(req.body.name),
     item = new Item({
       name: itemName
     });
@@ -91,7 +92,7 @@ exports.findAll = (req, res) => {
   }
 
   // Get query string from the Request and consider it as condition for findAll() method.
-  const title = req.query.title,
+  const title = sanitizeHtml(req.query.title),
     condition = title ? { title: { $regex: new RegExp(title), $options: "i" } } : {}
 
   Item.find(condition, { __v: 0 })
@@ -169,7 +170,7 @@ exports.findOne = (req, res) => {
     return
   }
 
-  const item = req.params.name;
+  const item = sanitizeHtml(req.params.name);
 
   Item.find({ "name": item }, { __v: 0 })
     .then(data => {
@@ -222,7 +223,7 @@ exports.update = (req, res) => {
     return
   }
 
-  const item = req.params.name;
+  const item = sanitizeHtml(req.params.name);
 
   Item.findOneAndUpdate({ name: item }, req.body, { useFindAndModify: false }, { __v: 0 })
     .then(data => {
@@ -267,7 +268,7 @@ exports.delete = (req, res) => {
     return
   }
 
-  const item = req.params.name;
+  const item = sanitizeHtml(req.params.name);
 
   Item.findOneAndRemove({ name: item })
     .then(data => {
@@ -316,7 +317,7 @@ exports.findOneById = (req, res) => {
     return
   }
 
-  const item = req.params.id;
+  const item = sanitizeHtml(req.params.id);
 
   Item.findOne({ "_id": item }, { __v: 0 })
     .then(data => {
@@ -361,7 +362,7 @@ exports.findByCategory = (req, res) => {
     return
   }
 
-  const category = req.params.category
+  const category = sanitizeHtml(req.params.category)
 
   Item.find({ "category": category }, { __v: 0 })
     .then(data => {
