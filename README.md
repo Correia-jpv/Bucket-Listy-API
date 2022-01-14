@@ -66,7 +66,7 @@ On the [Swagger Playground] you can test the publicly available API's endpoints 
 
 ## Contributing
 
-Contributions are welcome! Read the [contribution guidelines](/contributing.md) first.
+Contributions are welcome! Read the [contribution guidelines](https://github.com/Correia-jpv/.github/blob/main/CONTRIBUTING.md) first.
 
 Wish there was another feature? Feel free to open an [feature request issue](/../../issues/new?assignees=Correia-jpv&labels=enhancement&template=feature-request.md&title=%5BREQUEST%5D) with your suggestion!
 
