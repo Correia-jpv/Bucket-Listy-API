@@ -25,7 +25,7 @@
     "jsdoc": "^3.6.10",
     "loginradius-sdk": "^11.3.0",
     "mongoose": "^6.2.8",
-    "sanitize-html": "^2.7.0",
+    "sanitize-html": "^2.12.1",
     "swagger-ui-express": "^4.3.0",
     "yamljs": "^0.3.0"
   }
